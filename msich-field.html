@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>MSICH Field</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060810;--surface:#0d1117;--surface2:#141922;--surface3:#1a2030;
+  --green:#00e676;--red:#ff1744;--gold:#ffc107;--blue:#40c4ff;--purple:#e040fb;
+  --text:#eceff1;--muted:#546e7a;--subtle:#78909c;
+  --border:rgba(255,255,255,0.07);
+  --font:'Heebo',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden;-webkit-user-select:none}
+
+/* ══ LOGIN ══ */
+#loginScreen{
+  position:fixed;inset:0;z-index:1000;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,230,118,0.06) 0%, transparent 60%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;
+}
+.field-logo{margin-bottom:32px;text-align:center}
+.field-mark{
+  width:72px;height:72px;
+  background:linear-gradient(135deg,var(--green),#00b248);
+  border-radius:20px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;margin:0 auto 12px;
+  box-shadow:0 0 40px rgba(0,230,118,0.3);
+}
+.field-brand{font-size:24px;font-weight:900;letter-spacing:-0.5px}
+.field-sub{font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:2px}
+.login-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--border);border-top:1.5px solid rgba(0,230,118,0.3);border-radius:16px;padding:24px}
+.fl{margin-bottom:14px}
+.fl label{display:block;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px}
+.fi{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:var(--font);font-size:16px;outline:none;transition:border-color 0.2s}
+.fi:focus{border-color:var(--green)}
+.login-go{width:100%;padding:15px;background:linear-gradient(135deg,var(--green),#00b248);color:#000;border:none;border-radius:10px;font-family:var(--font);font-size:17px;font-weight:900;cursor:pointer;letter-spacing:0.5px;margin-top:4px}
+.login-go:active{transform:scale(0.97)}
+.login-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:12px}
+.login-hint b{color:var(--green)}
+
+/* ══ APP ══ */
+.app{display:none;flex-direction:column;height:100dvh}
+.app.show{display:flex}
+
+/* TOP BAR */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.tb-left{display:flex;align-items:center;gap:8px}
+.tb-mark{width:26px;height:26px;background:linear-gradient(135deg,var(--green),#00b248);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#000}
+.tb-title{font-size:14px;font-weight:800}
+.tb-right{display:flex;align-items:center;gap:8px}
+.tb-user{font-size:11px;color:var(--muted)}
+.tb-time{font-family:var(--mono);font-size:11px;color:var(--green)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+/* BOTTOM NAV */
+.bottom-nav{
+  display:flex;
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  flex-shrink:0;padding-bottom:env(safe-area-inset-bottom);
+}
+.bnav{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 8px;cursor:pointer;color:var(--muted);transition:color 0.2s;position:relative}
+.bnav.active{color:var(--green)}
+.bnav-icon{font-size:22px}
+.bnav-label{font-size:9px;font-weight:700;letter-spacing:0.5px}
+.bnav-badge{position:absolute;top:7px;right:50%;margin-right:-20px;background:var(--red);color:#fff;border-radius:10px;padding:1px 5px;font-size:9px;font-weight:700}
+
+/* PAGES */
+.page{display:none;padding:16px;padding-bottom:20px}
+.page.active{display:block}
+
+/* ══ HOME PAGE ══ */
+.home-greeting{margin-bottom:20px}
+.home-name{font-size:22px;font-weight:900;letter-spacing:-0.5px}
+.home-date{font-size:12px;color:var(--muted);margin-top:2px}
+
+.quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.qa{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:18px 16px;
+  display:flex;flex-direction:column;gap:8px;
+  cursor:pointer;transition:all 0.15s;
+  position:relative;overflow:hidden;
+}
+.qa:active{transform:scale(0.97);opacity:0.9}
+.qa.green{border-color:rgba(0,230,118,0.25);background:rgba(0,230,118,0.06)}
+.qa.red{border-color:rgba(255,23,68,0.25);background:rgba(255,23,68,0.06)}
+.qa.gold{border-color:rgba(255,193,7,0.25);background:rgba(255,193,7,0.06)}
+.qa.blue{border-color:rgba(64,196,255,0.25);background:rgba(64,196,255,0.06)}
+.qa-icon{font-size:28px}
+.qa-label{font-size:14px;font-weight:800;line-height:1.2}
+.qa-sub{font-size:10px;color:var(--muted)}
+.qa-arrow{position:absolute;bottom:12px;left:12px;font-size:18px;color:var(--muted)}
+
+.today-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px}
+.tc-title{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.tc-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.tc-stat{text-align:center;background:var(--surface2);border-radius:8px;padding:10px 6px}
+.tc-val{font-size:18px;font-weight:900;font-family:var(--mono);margin-bottom:2px}
+.tc-label{font-size:9px;color:var(--muted);letter-spacing:1px}
+
+.activity-feed{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px}
+.af-title{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.af-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.af-item:last-child{border-bottom:none}
+.af-icon{width:32px;height:32px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.af-info{flex:1;min-width:0}
+.af-name{font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.af-time{font-size:10px;color:var(--muted)}
+.af-amt{font-size:13px;font-weight:700;font-family:var(--mono);flex-shrink:0}
+
+/* ══ CHECK SCAN PAGE ══ */
+.scan-hero{
+  background:linear-gradient(135deg,rgba(0,230,118,0.1),rgba(0,230,118,0.03));
+  border:1.5px dashed rgba(0,230,118,0.4);
+  border-radius:16px;padding:20px;
+  text-align:center;margin-bottom:16px;
+  position:relative;overflow:hidden;
+}
+.scan-preview-img{width:100%;max-height:160px;object-fit:cover;border-radius:10px;display:none;margin-bottom:10px}
+.scan-cam-btn{
+  width:100%;padding:16px;
+  background:linear-gradient(135deg,var(--green),#00b248);
+  color:#000;border:none;border-radius:10px;
+  font-family:var(--font);font-size:16px;font-weight:900;cursor:pointer;
+}
+.scan-cam-btn:active{transform:scale(0.97)}
+.scan-status{
+  font-size:12px;margin-top:8px;min-height:18px;
+  font-family:var(--mono);
+}
+.scan-timer{
+  position:absolute;top:10px;left:10px;
+  background:rgba(0,0,0,0.7);border-radius:6px;
+  padding:3px 8px;font-family:var(--mono);font-size:11px;color:var(--green);
+  display:none;
+}
+
+.check-form{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px}
+.cf-title{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.fg{margin-bottom:10px}
+.fg label{display:block;font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+.fg .fi{font-size:16px;padding:12px 14px}
+.fg select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:var(--font);font-size:16px;outline:none;-webkit-appearance:none}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fee-preview{
+  background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.2);
+  border-radius:10px;padding:12px;margin:10px 0;
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;
+  display:none;
+}
+.fp-val{font-size:16px;font-weight:900;font-family:var(--mono);margin-bottom:2px}
+.fp-label{font-size:9px;color:var(--muted);letter-spacing:1px}
+
+.big-btn{
+  width:100%;padding:16px;border:none;border-radius:12px;
+  font-family:var(--font);font-size:17px;font-weight:900;cursor:pointer;
+  transition:transform 0.15s,opacity 0.15s;margin-top:10px;
+  letter-spacing:0.3px;
+}
+.big-btn:active{transform:scale(0.97);opacity:0.9}
+.btn-green{background:linear-gradient(135deg,var(--green),#00b248);color:#000}
+.btn-red{background:linear-gradient(135deg,var(--red),#b71c1c);color:#fff}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#ff8f00);color:#000}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+
+/* ══ CASH PAGE ══ */
+.cash-direction{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.cd-btn{
+  padding:20px 12px;border-radius:14px;border:none;cursor:pointer;
+  font-family:var(--font);font-size:16px;font-weight:900;text-align:center;
+  transition:all 0.15s;
+}
+.cd-btn:active{transform:scale(0.96)}
+.cd-in{background:rgba(0,230,118,0.15);color:var(--green);border:1.5px solid rgba(0,230,118,0.3)}
+.cd-out{background:rgba(255,23,68,0.15);color:var(--red);border:1.5px solid rgba(255,23,68,0.3)}
+.cd-btn.selected.cd-in{background:var(--green);color:#000}
+.cd-btn.selected.cd-out{background:var(--red);color:#fff}
+
+.amount-display{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:20px;text-align:center;margin-bottom:16px;
+}
+.amount-val{font-size:44px;font-weight:900;font-family:var(--mono);line-height:1;color:var(--text)}
+.amount-currency{font-size:16px;color:var(--muted);margin-top:4px}
+
+.numpad{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.np-btn{
+  padding:18px;background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;font-family:var(--mono);font-size:22px;font-weight:700;
+  color:var(--text);cursor:pointer;text-align:center;transition:all 0.1s;
+}
+.np-btn:active{background:var(--surface3);transform:scale(0.94)}
+.np-btn.np-del{background:rgba(255,23,68,0.1);color:var(--red);border-color:rgba(255,23,68,0.2)}
+.np-btn.np-ok{background:var(--green);color:#000;font-size:18px}
+
+.cash-categories{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.cash-cat{
+  padding:8px 14px;background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;font-size:12px;color:var(--muted);cursor:pointer;
+  transition:all 0.15s;
+}
+.cash-cat.active{background:rgba(64,196,255,0.15);color:var(--blue);border-color:rgba(64,196,255,0.3)}
+
+/* ══ SIGNATURE PAGE ══ */
+.sig-info{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px}
+.si-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.si-row:last-child{border-bottom:none}
+.si-label{color:var(--muted);font-size:11px}
+.si-val{font-weight:700;font-family:var(--mono)}
+
+.sig-doc{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:16px;margin-bottom:14px;font-size:12px;color:var(--subtle);line-height:1.7;
+}
+.sig-doc h3{color:var(--text);font-size:14px;margin-bottom:8px;font-weight:700}
+.sig-doc .highlight{color:var(--gold);font-weight:700}
+
+.sig-pad-wrap{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:14px;margin-bottom:14px;
+}
+.sig-pad-title{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.sig-canvas{
+  width:100%;height:160px;
+  background:var(--bg);border:1.5px dashed rgba(0,230,118,0.3);
+  border-radius:10px;cursor:crosshair;display:block;touch-action:none;
+}
+.sig-actions{display:flex;gap:8px;margin-top:8px}
+.sig-clear{flex:1;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:13px;cursor:pointer}
+
+/* ══ HISTORY PAGE ══ */
+.history-filter{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.hf-btn{
+  padding:8px 16px;background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;font-size:12px;color:var(--muted);cursor:pointer;
+  white-space:nowrap;transition:all 0.15s;flex-shrink:0;
+}
+.hf-btn.active{background:rgba(0,230,118,0.15);color:var(--green);border-color:rgba(0,230,118,0.3)}
+
+.h-item{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;
+}
+.hi-icon{width:40px;height:40px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.hi-info{flex:1;min-width:0}
+.hi-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.hi-meta{font-size:11px;color:var(--muted)}
+.hi-amt{text-align:left;flex-shrink:0}
+.hi-val{font-size:15px;font-weight:900;font-family:var(--mono)}
+.hi-status{font-size:10px;margin-top:2px}
+
+/* BADGE */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.bg{background:rgba(0,230,118,0.15);color:var(--green)}
+.br{background:rgba(255,23,68,0.15);color:var(--red)}
+.bgd{background:rgba(255,193,7,0.15);color:var(--gold)}
+.bb{background:rgba(64,196,255,0.15);color:var(--blue)}
+
+/* SUCCESS OVERLAY */
+.success-overlay{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,0.92);
+  align-items:center;justify-content:center;flex-direction:column;
+  text-align:center;padding:24px;
+}
+.success-overlay.show{display:flex}
+.success-icon{font-size:72px;animation:popIn 0.5s ease}
+@keyframes popIn{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.success-title{font-size:26px;font-weight:900;color:var(--green);margin:16px 0 8px}
+.success-sub{font-size:14px;color:var(--muted);margin-bottom:6px}
+.success-ref{font-family:var(--mono);font-size:12px;color:var(--green);background:rgba(0,230,118,0.1);border-radius:6px;padding:6px 14px;margin:8px 0 24px}
+.success-close{width:100%;max-width:300px;padding:14px;background:var(--green);color:#000;border:none;border-radius:10px;font-family:var(--font);font-size:16px;font-weight:900;cursor:pointer}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:flex-end;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-top:1.5px solid var(--green);border-radius:16px 16px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom));width:100%;max-height:80dvh;overflow-y:auto;position:relative}
+.modal-handle{width:32px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 12px}
+.modal-title{font-size:15px;font-weight:900;color:var(--green);margin-bottom:14px}
+.modal-close{position:absolute;top:12px;left:12px;background:var(--surface2);border:none;width:26px;height:26px;border-radius:50%;color:var(--muted);font-size:12px;cursor:pointer}
+
+/* TOAST */
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 18px;font-size:12px;font-weight:700;color:var(--text);z-index:600;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.6)}
+.toast.show{opacity:1}
+
+.empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:13px}
+
+/* TIMER */
+.op-timer{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-family:var(--mono);font-size:11px;color:var(--muted);
+  margin-bottom:14px;
+}
+.ot-bar{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.ot-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.1s linear}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-icon" id="successIcon">✅</div>
+  <div class="success-title" id="successTitle">בוצע!</div>
+  <div class="success-sub" id="successSub"></div>
+  <div class="success-ref" id="successRef"></div>
+  <button class="success-close" onclick="closeSuccess()">חזור לתפריט הראשי</button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div id="loginScreen">
+  <div class="field-logo">
+    <div class="field-mark">⚡</div>
+    <div class="field-brand">MSICH Field</div>
+    <div class="field-sub">אפליקציית שטח</div>
+  </div>
+  <div class="login-card">
+    <div class="fl"><label>שם משתמש</label><input class="fi" id="lu" value="field" autocomplete="username"></div>
+    <div class="fl"><label>סיסמה</label><input class="fi" type="password" id="lp" value="Field123!" autocomplete="current-password"></div>
+    <button class="login-go" onclick="doLogin()">כניסה לשטח ⚡</button>
+    <div class="login-hint">דמו: <b>field / Field123!</b> | מנהל: <b>admin / Admin123!</b></div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div class="app" id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-mark">⚡</div>
+      <div class="tb-title">שטח</div>
+    </div>
+    <div class="tb-right">
+      <div class="sync-dot"></div>
+      <div class="tb-time" id="clock"></div>
+      <div class="tb-user" id="tbUser"></div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="content">
+
+    <!-- HOME -->
+    <div class="page active" id="homePage">
+      <div style="padding:16px">
+        <div class="home-greeting">
+          <div class="home-name" id="homeName">שלום, עובד!</div>
+          <div class="home-date" id="homeDate"></div>
+        </div>
+
+        <!-- 30-second operation indicator -->
+        <div class="op-timer" id="opTimer" style="display:none">
+          <span>⏱</span>
+          <div class="ot-bar"><div class="ot-fill" id="opFill" style="width:100%"></div></div>
+          <span id="opSec">30s</span>
+        </div>
+
+        <div class="quick-actions">
+          <div class="qa green" onclick="goPage('scan')">
+            <div class="qa-icon">📷</div>
+            <div class="qa-label">סרוק צ'ק</div>
+            <div class="qa-sub">OCR אוטומטי</div>
+            <div class="qa-arrow">←</div>
+          </div>
+          <div class="qa gold" onclick="goPage('cash')">
+            <div class="qa-icon">💵</div>
+            <div class="qa-label">דווח מזומן</div>
+            <div class="qa-sub">קבלה / תשלום</div>
+            <div class="qa-arrow">←</div>
+          </div>
+          <div class="qa blue" onclick="goPage('signature')">
+            <div class="qa-icon">✍️</div>
+            <div class="qa-label">חתימה</div>
+            <div class="qa-sub">הסכם דיגיטלי</div>
+            <div class="qa-arrow">←</div>
+          </div>
+          <div class="qa red" onclick="openUrgent()">
+            <div class="qa-icon">🚨</div>
+            <div class="qa-label">דחוף</div>
+            <div class="qa-sub">צ'ק חזר / בעיה</div>
+            <div class="qa-arrow">←</div>
+          </div>
+        </div>
+
+        <div class="today-card">
+          <div class="tc-title">היום שלי</div>
+          <div class="tc-stats">
+            <div class="tc-stat">
+              <div class="tc-val" style="color:var(--green)" id="todayChecks">0</div>
+              <div class="tc-label">צ'קים</div>
+            </div>
+            <div class="tc-stat">
+              <div class="tc-val" style="color:var(--gold)" id="todayCash">₪0</div>
+              <div class="tc-label">מזומן</div>
+            </div>
+            <div class="tc-stat">
+              <div class="tc-val" style="color:var(--blue)" id="todaySigs">0</div>
+              <div class="tc-label">חתימות</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="activity-feed">
+          <div class="af-title">פעולות אחרונות</div>
+          <div id="actFeed"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCAN CHECK -->
+    <div class="page" id="scanPage">
+      <div style="padding:16px">
+        <div class="scan-hero">
+          <div class="scan-timer" id="scanTimer">⏱ 0s</div>
+          <img id="scanPreview" class="scan-preview-img">
+          <input type="file" id="camInput" accept="image/*" capture="environment" style="display:none" onchange="handleScan(this)">
+          <button class="scan-cam-btn" onclick="document.getElementById('camInput').click()">
+            📷 צלם צ'ק עכשיו
+          </button>
+          <div class="scan-status" id="scanStatus" style="color:var(--muted)">לחץ לצילום הצ'ק</div>
+        </div>
+
+        <div class="check-form">
+          <div class="cf-title">פרטי הצ'ק</div>
+
+          <div class="fg"><label>לקוח / משלם</label><input class="fi" id="cClient" placeholder="שם בעל הצ'ק"></div>
+          <div class="f-row">
+            <div class="fg"><label>בנק</label>
+              <select id="cBank">
+                <option>הפועלים</option><option>לאומי</option><option>דיסקונט</option>
+                <option>מזרחי</option><option>בינלאומי</option><option>אוצר החייל</option><option>אחר</option>
+              </select>
+            </div>
+            <div class="fg"><label>מספר צ'ק</label><input class="fi" id="cNum" placeholder="112233" inputmode="numeric"></div>
+          </div>
+          <div class="fg"><label>מספר חשבון</label><input class="fi" id="cAcc" placeholder="12-345678" inputmode="numeric"></div>
+          <div class="f-row">
+            <div class="fg"><label>סכום ₪</label><input class="fi" type="number" id="cAmt" placeholder="0" inputmode="numeric" oninput="calcFee()"></div>
+            <div class="fg"><label>עמלה %</label><input class="fi" type="number" id="cFeeP" value="3" step="0.1" inputmode="decimal" oninput="calcFee()"></div>
+          </div>
+          <div class="fee-preview" id="feePreview">
+            <div><div class="fp-val" style="color:var(--gold)" id="fpFee">₪0</div><div class="fp-label">עמלה</div></div>
+            <div><div class="fp-val" style="color:var(--green)" id="fpNet">₪0</div><div class="fp-label">לתשלום</div></div>
+            <div><div class="fp-val" style="color:var(--blue)" id="fpDate">—</div><div class="fp-label">פירעון</div></div>
+          </div>
+          <div class="fg"><label>תאריך פירעון</label><input class="fi" type="date" id="cDate" oninput="updateFeePreview()"></div>
+          <div class="fg"><label>הערות</label><input class="fi" id="cNotes" placeholder="הערות..."></div>
+
+          <button class="big-btn btn-green" onclick="submitCheck()">✓ שמור ושלח למערכת</button>
+          <button class="big-btn btn-ghost" onclick="clearCheckForm()" style="margin-top:8px">נקה טופס</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CASH REPORT -->
+    <div class="page" id="cashPage">
+      <div style="padding:16px">
+        <div class="cash-direction">
+          <div class="cd-btn cd-in selected" id="dirIn" onclick="selectDir('in')">
+            📥 קיבלתי
+          </div>
+          <div class="cd-btn cd-out" id="dirOut" onclick="selectDir('out')">
+            📤 שילמתי
+          </div>
+        </div>
+
+        <div class="amount-display">
+          <div class="amount-val" id="amountDisplay">0</div>
+          <div class="amount-currency">₪ שקלים</div>
+        </div>
+
+        <div class="numpad">
+          <div class="np-btn" onclick="numpad('1')">1</div>
+          <div class="np-btn" onclick="numpad('2')">2</div>
+          <div class="np-btn" onclick="numpad('3')">3</div>
+          <div class="np-btn" onclick="numpad('4')">4</div>
+          <div class="np-btn" onclick="numpad('5')">5</div>
+          <div class="np-btn" onclick="numpad('6')">6</div>
+          <div class="np-btn" onclick="numpad('7')">7</div>
+          <div class="np-btn" onclick="numpad('8')">8</div>
+          <div class="np-btn" onclick="numpad('9')">9</div>
+          <div class="np-btn" onclick="numpad('000')">000</div>
+          <div class="np-btn" onclick="numpad('0')">0</div>
+          <div class="np-btn np-del" onclick="numpadDel()">⌫</div>
+        </div>
+
+        <div style="margin-bottom:12px">
+          <div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">קטגוריה</div>
+          <div class="cash-categories">
+            <div class="cash-cat active" onclick="selectCat(this,'קבלת תשלום')">קבלת תשלום</div>
+            <div class="cash-cat" onclick="selectCat(this,'החזר הלוואה')">החזר הלוואה</div>
+            <div class="cash-cat" onclick="selectCat(this,'עמלת ניכיון')">עמלת ניכיון</div>
+            <div class="cash-cat" onclick="selectCat(this,'הוצאה תפעולית')">הוצאה תפעולית</div>
+            <div class="cash-cat" onclick="selectCat(this,'אחר')">אחר</div>
+          </div>
+        </div>
+
+        <div class="fg"><label>שם לקוח / תיאור</label><input class="fi" id="cashDesc" placeholder="שם לקוח או תיאור"></div>
+
+        <button class="big-btn btn-green" onclick="submitCash()">✓ דווח תנועת מזומן</button>
+      </div>
+    </div>
+
+    <!-- SIGNATURE -->
+    <div class="page" id="signaturePage">
+      <div style="padding:16px">
+        <!-- Select document type -->
+        <div id="sigSelectWrap">
+          <div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">בחר סוג מסמך</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="qa green" onclick="loadSigDoc('loan')" style="flex-direction:row;align-items:center;gap:14px">
+              <div class="qa-icon">💼</div>
+              <div><div class="qa-label">הסכם הלוואה</div><div class="qa-sub">חוזה מלא עם לוח סילוקין</div></div>
+            </div>
+            <div class="qa gold" onclick="loadSigDoc('check')" style="flex-direction:row;align-items:center;gap:14px">
+              <div class="qa-icon">🧾</div>
+              <div><div class="qa-label">הצהרת ניכיון צ'ק</div><div class="qa-sub">אישור מוסר הצ'ק</div></div>
+            </div>
+            <div class="qa blue" onclick="loadSigDoc('aml')" style="flex-direction:row;align-items:center;gap:14px">
+              <div class="qa-icon">🔐</div>
+              <div><div class="qa-label">הצהרת הלבנת הון</div><div class="qa-sub">AML Declaration</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Signature form -->
+        <div id="sigFormWrap" style="display:none">
+          <div class="sig-info" id="sigInfoBox"></div>
+
+          <div class="sig-doc" id="sigDocText"></div>
+
+          <div class="sig-pad-wrap">
+            <div class="sig-pad-title">חתימת הלקוח</div>
+            <canvas class="sig-canvas" id="sigCanvas" width="400" height="160"></canvas>
+            <div class="sig-actions">
+              <button class="sig-clear" onclick="clearSig()">נקה חתימה</button>
+              <button style="flex:1;padding:10px;background:rgba(64,196,255,0.15);color:var(--blue);border:1px solid rgba(64,196,255,0.2);border-radius:8px;font-family:var(--font);font-size:13px;cursor:pointer" onclick="previewSig()">תצוגה מקדימה</button>
+            </div>
+          </div>
+
+          <div class="fg"><label>שם הלקוח (מודפס)</label><input class="fi" id="sigName" placeholder="שם מלא לאישור"></div>
+          <div class="fg"><label>מספר ת.ז</label><input class="fi" id="sigId" placeholder="123456789" inputmode="numeric"></div>
+
+          <button class="big-btn btn-green" onclick="submitSig()">✓ אשר וחתום</button>
+          <button class="big-btn btn-ghost" onclick="backToSigSelect()" style="margin-top:8px">← חזור</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="historyPage">
+      <div style="padding:16px">
+        <div class="history-filter">
+          <div class="hf-btn active" onclick="filterHist('all',this)">הכל</div>
+          <div class="hf-btn" onclick="filterHist('check',this)">צ'קים</div>
+          <div class="hf-btn" onclick="filterHist('cash',this)">מזומן</div>
+          <div class="hf-btn" onclick="filterHist('sig',this)">חתימות</div>
+        </div>
+        <div id="histList"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="bnav active" id="bn-home" onclick="goPage('home')"><div class="bnav-icon">🏠</div><div class="bnav-label">בית</div></div>
+    <div class="bnav" id="bn-scan" onclick="goPage('scan')"><div class="bnav-icon">📷</div><div class="bnav-label">סרוק</div></div>
+    <div class="bnav" id="bn-cash" onclick="goPage('cash')"><div class="bnav-icon">💵</div><div class="bnav-label">מזומן</div></div>
+    <div class="bnav" id="bn-signature" onclick="goPage('signature')"><div class="bnav-icon">✍️</div><div class="bnav-label">חתימה</div></div>
+    <div class="bnav" id="bn-history" onclick="goPage('history')"><div class="bnav-icon">📋</div><div class="bnav-label">היסטוריה</div></div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+// ══ STATE ══
+var currentUser=null;
+var cashDir='in';
+var cashCat='קבלת תשלום';
+var cashAmt='0';
+var sigCtx=null;
+var sigDrawing=false;
+var sigLastX=0,sigLastY=0;
+var currentSigDoc='';
+var opStart=null;
+var opTimer=null;
+
+var LOCAL={
+  actions:[
+    {id:1,type:'check',icon:'🧾',name:'דוד מזרחי — ₪30,000',meta:'הפועלים | פירעון 01/06',amt:'₪900',amtColor:'#00e676',time:'לפני שעה',status:'שנשלח'},
+    {id:2,type:'cash',icon:'💵',name:'קיבלתי — החזר הלוואה',meta:'משה כהן',amt:'₪2,500',amtColor:'#00e676',time:'לפני 2 שעות',status:'נרשם'},
+    {id:3,type:'sig',icon:'✍️',name:'הסכם הלוואה — רחל לוי',meta:'AML + חתימה',amt:'',amtColor:'',time:'אתמול',status:'נחתם'},
+  ],
+  todayChecks:1,todayCash:2500,todaySigs:1
+};
+
+// ══ AUTH ══
+var USERS=[
+  {username:'admin',pass:'Admin123!',name:'מנהל ראשי',role:'admin'},
+  {username:'field',pass:'Field123!',name:'עובד שטח',role:'field'},
+  {username:'partner',pass:'Partner1!',name:'שותף',role:'partner'},
+];
+function doLogin(){
+  var u=document.getElementById('lu').value.trim();
+  var p=document.getElementById('lp').value;
+  var user=USERS.find(function(x){return x.username===u&&x.pass===p;});
+  if(!user){toast('❌ פרטים שגויים');return;}
+  currentUser=user;
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').classList.add('show');
+  document.getElementById('tbUser').textContent=user.name;
+  document.getElementById('homeName').textContent='שלום, '+user.name.split(' ')[0]+'!';
+  document.getElementById('homeDate').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
+  startClock();
+  goPage('home');
+  renderHome();
+}
+
+// ══ CLOCK ══
+function startClock(){
+  function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}
+  tick();setInterval(tick,1000);
+}
+
+// ══ PAGES ══
+function goPage(name){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  var pg=document.getElementById(name+'Page');
+  if(pg){pg.classList.add('active');pg.scrollTop=0;}
+  document.querySelectorAll('.bnav').forEach(function(b){b.classList.remove('active');});
+  var bn=document.getElementById('bn-'+name);
+  if(bn) bn.classList.add('active');
+  if(name==='home') renderHome();
+  if(name==='history') renderHistory('all');
+  if(name==='scan') startOpTimer();
+  if(name==='signature'){
+    document.getElementById('sigSelectWrap').style.display='';
+    document.getElementById('sigFormWrap').style.display='none';
+  }
+}
+
+// ══ OPERATION TIMER (30s target) ══
+function startOpTimer(){
+  var start=Date.now();
+  var timerEl=document.getElementById('scanTimer');
+  timerEl.style.display='block';
+  clearInterval(opTimer);
+  opTimer=setInterval(function(){
+    var sec=Math.round((Date.now()-start)/1000);
+    timerEl.textContent='⏱ '+sec+'s';
+    timerEl.style.color=sec<20?'var(--green)':sec<30?'var(--gold)':'var(--red)';
+  },100);
+}
+
+// ══ HOME ══
+function renderHome(){
+  document.getElementById('todayChecks').textContent=LOCAL.todayChecks;
+  document.getElementById('todayCash').textContent='₪'+LOCAL.todayCash.toLocaleString();
+  document.getElementById('todaySigs').textContent=LOCAL.todaySigs;
+  document.getElementById('actFeed').innerHTML=LOCAL.actions.map(function(a){
+    return '<div class="af-item">'+
+      '<div class="af-icon">'+a.icon+'</div>'+
+      '<div class="af-info"><div class="af-name">'+a.name+'</div><div class="af-time">'+a.time+' · '+a.meta+'</div></div>'+
+      (a.amt?'<div class="af-amt" style="color:'+a.amtColor+'">'+a.amt+'</div>':'')+
+    '</div>';
+  }).join('');
+}
+
+// ══ SCAN CHECK ══
+async function handleScan(input){
+  var file=input.files[0];
+  if(!file) return;
+  startOpTimer();
+  var preview=document.getElementById('scanPreview');
+  var status=document.getElementById('scanStatus');
+  var r=new FileReader();
+  r.onload=function(e){preview.src=e.target.result;preview.style.display='block';};
+  r.readAsDataURL(file);
+  status.textContent='🤖 AI מנתח את הצ\'ק...';
+  status.style.color='var(--gold)';
+  try {
+    var b64r=new FileReader();
+    b64r.onload=async function(e){
+      var base64=e.target.result.split(',')[1];
+      var resp=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',max_tokens:400,
+          messages:[{role:'user',content:[
+            {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:base64}},
+            {type:'text',text:'ישראלי צ\'ק. תחזיר JSON בלבד: {"bank":"","account":"","checkNum":"","amount":"","date":"YYYY-MM-DD","payee":""}'}
+          ]}]
+        })
+      });
+      var data=await resp.json();
+      var txt=(data.content&&data.content[0]&&data.content[0].text)||'{}';
+      try {
+        var info=JSON.parse(txt.replace(/```json|```/g,'').trim());
+        var filled=0;
+        var banks=['הפועלים','לאומי','דיסקונט','מזרחי'];
+        var bSel=document.getElementById('cBank');
+        banks.forEach(function(b,i){if(info.bank&&info.bank.includes(b)){bSel.selectedIndex=i;filled++;}});
+        if(info.checkNum){document.getElementById('cNum').value=info.checkNum;filled++;}
+        if(info.account){document.getElementById('cAcc').value=info.account;filled++;}
+        if(info.amount){var a=info.amount.replace(/[^0-9.]/g,'');document.getElementById('cAmt').value=a;calcFee();filled++;}
+        if(info.date){document.getElementById('cDate').value=info.date;updateFeePreview();filled++;}
+        if(info.payee){document.getElementById('cClient').value=info.payee;filled++;}
+        status.textContent='✅ '+filled+' שדות זוהו! זמן: '+document.getElementById('scanTimer').textContent.replace('⏱ ','');
+        status.style.color='var(--green)';
+      } catch(pe){status.textContent='⚠️ לא זוהה — מלא ידנית';status.style.color='var(--gold)';}
+    };
+    b64r.readAsDataURL(file);
+  } catch(err){status.textContent='שגיאה — מלא ידנית';status.style.color='var(--red)';}
+}
+
+function calcFee(){
+  var a=+document.getElementById('cAmt').value||0;
+  var p=+document.getElementById('cFeeP').value||3;
+  var fee=Math.round(a*p/100);
+  document.getElementById('fpFee').textContent='₪'+fee.toLocaleString();
+  document.getElementById('fpNet').textContent='₪'+(a-fee).toLocaleString();
+  document.getElementById('feePreview').style.display=a?'grid':'none';
+  updateFeePreview();
+}
+function updateFeePreview(){
+  var d=document.getElementById('cDate').value;
+  if(d) document.getElementById('fpDate').textContent=new Date(d).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'});
+}
+function submitCheck(){
+  var client=document.getElementById('cClient').value;
+  var amt=+document.getElementById('cAmt').value;
+  if(!client||!amt){toast('⚠️ מלא שם לקוח וסכום');return;}
+  var fee=Math.round(amt*(+document.getElementById('cFeeP').value||3)/100);
+  var ref='CHK-'+Date.now().toString().slice(-6);
+  LOCAL.actions.unshift({id:Date.now(),type:'check',icon:'🧾',name:client+' — ₪'+amt.toLocaleString(),meta:document.getElementById('cBank').value+' | צ\'ק '+document.getElementById('cNum').value,amt:'₪'+fee,amtColor:'var(--green)',time:'עכשיו',status:'נשלח'});
+  LOCAL.todayChecks++;
+  clearInterval(opTimer);
+  showSuccess('✅','צ\'ק נרשם בהצלחה!','עמלה: ₪'+fee.toLocaleString()+' | לקוח: '+client,ref);
+  clearCheckForm();
+}
+function clearCheckForm(){
+  ['cClient','cNum','cAcc','cAmt','cNotes'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('cFeeP').value='3';
+  document.getElementById('cDate').value='';
+  document.getElementById('feePreview').style.display='none';
+  document.getElementById('scanPreview').style.display='none';
+  document.getElementById('scanStatus').textContent='לחץ לצילום הצ\'ק';
+  document.getElementById('scanTimer').style.display='none';
+}
+
+// ══ CASH ══
+function selectDir(dir){
+  cashDir=dir;
+  document.getElementById('dirIn').classList.toggle('selected',dir==='in');
+  document.getElementById('dirOut').classList.toggle('selected',dir==='out');
+}
+function selectCat(el,cat){
+  cashCat=cat;
+  document.querySelectorAll('.cash-cat').forEach(function(c){c.classList.remove('active');});
+  el.classList.add('active');
+}
+function numpad(n){
+  if(cashAmt==='0') cashAmt=n;
+  else cashAmt+=n;
+  if(cashAmt.length>9) cashAmt=cashAmt.slice(0,-1);
+  document.getElementById('amountDisplay').textContent=parseInt(cashAmt||0).toLocaleString();
+}
+function numpadDel(){
+  cashAmt=cashAmt.slice(0,-1)||'0';
+  document.getElementById('amountDisplay').textContent=parseInt(cashAmt||0).toLocaleString();
+}
+function submitCash(){
+  var amt=parseInt(cashAmt)||0;
+  if(!amt){toast('⚠️ הכנס סכום');return;}
+  var desc=document.getElementById('cashDesc').value||cashCat;
+  var ref='CSH-'+Date.now().toString().slice(-6);
+  LOCAL.actions.unshift({id:Date.now(),type:'cash',icon:'💵',name:(cashDir==='in'?'קיבלתי':'שילמתי')+' — '+cashCat,meta:desc,amt:(cashDir==='in'?'+':'−')+'₪'+amt.toLocaleString(),amtColor:cashDir==='in'?'var(--green)':'var(--red)',time:'עכשיו',status:'נרשם'});
+  LOCAL.todayCash+=cashDir==='in'?amt:0;
+  showSuccess(cashDir==='in'?'💰':'💸',cashDir==='in'?'קבלה נרשמה!':'תשלום נרשם!','סכום: ₪'+amt.toLocaleString()+' | '+cashCat,ref);
+  cashAmt='0';document.getElementById('amountDisplay').textContent='0';
+  document.getElementById('cashDesc').value='';
+}
+
+// ══ SIGNATURE ══
+function loadSigDoc(type){
+  currentSigDoc=type;
+  document.getElementById('sigSelectWrap').style.display='none';
+  document.getElementById('sigFormWrap').style.display='';
+  var docs={
+    loan:{
+      info:[{l:'סוג מסמך',v:'הסכם הלוואה'},{l:'תוקף משפטי',v:'✅ מחייב'},{l:'נדרש',v:'ת.ז + חתימה'}],
+      text:'<h3>הסכם הלוואה — MSICH בע"מ</h3>אני החתום מטה מאשר/ת קבלת הלוואה בתנאים המפורטים בהסכם המלא, לרבות ריבית, לוח תשלומים ובטחונות. <span class="highlight">ידוע לי כי אי-עמידה בתשלומים תגרור הליכי גבייה.</span> מסמך זה מהווה ראיה חוקית מחייבת.'
+    },
+    check:{
+      info:[{l:'סוג מסמך',v:'הצהרת ניכיון'},{l:'תוקף משפטי',v:'✅ מחייב'},{l:'נדרש',v:'ת.ז + חתימה'}],
+      text:'<h3>הצהרת ניכיון צ\'ק</h3>אני המוסר/ת מצהיר/ה כי הצ\'ק הנמסר לניכיון הינו כשר ותקף. <span class="highlight">ידוע לי כי מסירת צ\'ק ללא כיסוי מהווה עבירה פלילית.</span> אני מתחייב/ת לשלם את מלוא הסכום בתוספת קנסות במקרה של חזרה.'
+    },
+    aml:{
+      info:[{l:'סוג מסמך',v:'הצהרת AML'},{l:'חוק',v:'איסור הלבנת הון'},{l:'נדרש',v:'ת.ז + חתימה'}],
+      text:'<h3>הצהרת איסור הלבנת הון</h3>אני מצהיר/ת כי מקור הכספים בעסקה הנ\'ל הינו חוקי לחלוטין. <span class="highlight">ידוע לי כי הלבנת הון הינה עבירה פלילית חמורה לפי חוק תש"ס-2000.</span> אני מסכים/ה לדיווח לרשויות במידת הצורך.'
+    }
+  };
+  var doc=docs[type];
+  document.getElementById('sigInfoBox').innerHTML=doc.info.map(function(r){
+    return '<div class="si-row"><div class="si-label">'+r.l+'</div><div class="si-val">'+r.v+'</div></div>';
+  }).join('');
+  document.getElementById('sigDocText').innerHTML=doc.text;
+  initSigPad();
+}
+function initSigPad(){
+  var canvas=document.getElementById('sigCanvas');
+  sigCtx=canvas.getContext('2d');
+  sigCtx.clearRect(0,0,canvas.width,canvas.height);
+  sigCtx.strokeStyle='var(--green)';
+  sigCtx.lineWidth=2.5;
+  sigCtx.lineCap='round';
+  sigCtx.lineJoin='round';
+  function getPos(e){
+    var rect=canvas.getBoundingClientRect();
+    var t=e.touches?e.touches[0]:e;
+    return{x:(t.clientX-rect.left)*(canvas.width/rect.width),y:(t.clientY-rect.top)*(canvas.height/rect.height)};
+  }
+  canvas.addEventListener('mousedown',function(e){sigDrawing=true;var p=getPos(e);sigLastX=p.x;sigLastY=p.y;});
+  canvas.addEventListener('touchstart',function(e){e.preventDefault();sigDrawing=true;var p=getPos(e);sigLastX=p.x;sigLastY=p.y;},{passive:false});
+  canvas.addEventListener('mousemove',function(e){if(!sigDrawing)return;var p=getPos(e);sigCtx.beginPath();sigCtx.moveTo(sigLastX,sigLastY);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();sigLastX=p.x;sigLastY=p.y;});
+  canvas.addEventListener('touchmove',function(e){e.preventDefault();if(!sigDrawing)return;var p=getPos(e);sigCtx.beginPath();sigCtx.moveTo(sigLastX,sigLastY);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();sigLastX=p.x;sigLastY=p.y;},{passive:false});
+  ['mouseup','touchend'].forEach(function(ev){canvas.addEventListener(ev,function(){sigDrawing=false;});});
+}
+function clearSig(){sigCtx&&sigCtx.clearRect(0,0,document.getElementById('sigCanvas').width,document.getElementById('sigCanvas').height);}
+function previewSig(){toast('תצוגה מקדימה — מסמך מוכן להדפסה');}
+function backToSigSelect(){document.getElementById('sigSelectWrap').style.display='';document.getElementById('sigFormWrap').style.display='none';}
+function submitSig(){
+  var name=document.getElementById('sigName').value;
+  var idNum=document.getElementById('sigId').value;
+  if(!name||!idNum){toast('⚠️ מלא שם ות.ז');return;}
+  var canvas=document.getElementById('sigCanvas');
+  var imgData=sigCtx.getImageData(0,0,canvas.width,canvas.height);
+  var hasData=Array.from(imgData.data).some(function(v,i){return i%4!==3&&v!==0;});
+  if(!hasData){toast('⚠️ הוסף חתימה');return;}
+  var ref='SIG-'+Date.now().toString().slice(-6);
+  var docNames={loan:'הסכם הלוואה',check:'הצהרת ניכיון',aml:'הצהרת AML'};
+  LOCAL.actions.unshift({id:Date.now(),type:'sig',icon:'✍️',name:docNames[currentSigDoc]+' — '+name,meta:'ת.ז: '+idNum,amt:'',amtColor:'',time:'עכשיו',status:'נחתם'});
+  LOCAL.todaySigs++;
+  showSuccess('✍️','מסמך נחתם!',docNames[currentSigDoc]+' | '+name,ref);
+  clearSig();
+  document.getElementById('sigName').value='';
+  document.getElementById('sigId').value='';
+  backToSigSelect();
+}
+
+// ══ HISTORY ══
+function filterHist(type,btn){
+  document.querySelectorAll('.hf-btn').forEach(function(b){b.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  renderHistory(type);
+}
+function renderHistory(type){
+  var list=type==='all'?LOCAL.actions:LOCAL.actions.filter(function(a){return a.type===type;});
+  document.getElementById('histList').innerHTML=list.length?list.map(function(a){
+    return '<div class="h-item">'+
+      '<div class="hi-icon">'+a.icon+'</div>'+
+      '<div class="hi-info"><div class="hi-name">'+a.name+'</div><div class="hi-meta">'+a.meta+' · '+a.time+'</div></div>'+
+      '<div class="hi-amt">'+
+      (a.amt?'<div class="hi-val" style="color:'+a.amtColor+'">'+a.amt+'</div>':'')+
+      '<div class="hi-status"><span class="badge bg">'+a.status+'</span></div>'+
+      '</div></div>';
+  }).join(''):'<div class="empty">אין פעולות</div>';
+}
+
+// ══ URGENT ══
+function openUrgent(){
+  document.getElementById('modalTitle').textContent='🚨 דיווח דחוף';
+  document.getElementById('modalBody').innerHTML=
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">'+
+    '<button class="big-btn btn-red" onclick="reportUrgent(\'צ\\\'ק חזר\')">↩️ צ\'ק חזר</button>'+
+    '<button class="big-btn" style="background:rgba(255,193,7,0.15);color:var(--gold);border:1px solid rgba(255,193,7,0.3);border-radius:12px;padding:14px;font-family:var(--font);font-size:16px;font-weight:700;cursor:pointer" onclick="reportUrgent(\'לקוח מסרב לשלם\')">⚠️ לקוח מסרב לשלם</button>'+
+    '<button class="big-btn" style="background:rgba(64,196,255,0.15);color:var(--blue);border:1px solid rgba(64,196,255,0.3);border-radius:12px;padding:14px;font-family:var(--font);font-size:16px;font-weight:700;cursor:pointer" onclick="reportUrgent(\'בעיה אחרת\')">📋 בעיה אחרת</button>'+
+    '</div>';
+  document.getElementById('modalBg').classList.add('show');
+}
+function reportUrgent(type){
+  closeModal();
+  document.getElementById('modalTitle').textContent='🚨 '+type;
+  document.getElementById('modalBody').innerHTML=
+    '<div class="fg"><label>שם לקוח</label><input class="fi" id="urgClient" placeholder="שם הלקוח"></div>'+
+    '<div class="fg"><label>פרטים</label><textarea style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;resize:none;height:80px" id="urgDetails" placeholder="תאר את הבעיה..."></textarea></div>'+
+    '<button class="big-btn btn-red" onclick="submitUrgent(\''+type+'\')">📤 שלח התראה למנהל</button>';
+  document.getElementById('modalBg').classList.add('show');
+}
+function submitUrgent(type){
+  var c=document.getElementById('urgClient')?.value||'לא צוין';
+  closeModal();
+  showSuccess('🚨','התראה נשלחה!','סוג: '+type+' | לקוח: '+c,'URG-'+Date.now().toString().slice(-6));
+}
+
+// ══ SUCCESS ══
+function showSuccess(icon,title,sub,ref){
+  document.getElementById('successIcon').textContent=icon;
+  document.getElementById('successTitle').textContent=title;
+  document.getElementById('successSub').textContent=sub;
+  document.getElementById('successRef').textContent='אסמכתא: '+ref;
+  document.getElementById('successOverlay').classList.add('show');
+}
+function closeSuccess(){
+  document.getElementById('successOverlay').classList.remove('show');
+  goPage('home');
+}
+
+// ══ MODAL ══
+function closeModal(){document.getElementById('modalBg').classList.remove('show');}
+
+// ══ TOAST ══
+var toastT;
+function toast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(function(){el.classList.remove('show');},2500);
+}
+</script>
+</body>
+</html>
